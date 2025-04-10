@@ -180,8 +180,6 @@ button {
 }
 
 .header-container--long {
-    background-image: url('https://pics.filmaffinity.com/Deadpool-777527803-large.jpg');
-    background: linear-gradient(180deg, rgba(0, 0, 0, 0.35) 19.27%, rgba(0, 0, 0, 0) 29.17%), url(https://pics.filmaffinity.com/Deadpool-777527803-large.jpg);
     background-size: cover !important;
     background-position: revert ; /* Centra la imagen */
     background-repeat: no-repeat; /* Evita que se repita */
@@ -665,3 +663,92 @@ footer {
 
     }
 
+/* Skeleton Loading Styles */
+@keyframes shimmer {
+    0% {
+        background-position: -468px 0
+    }
+
+    100% {
+        background-position: 468px 0
+    }
+}
+
+.skeleton {
+    animation: shimmer 1.5s infinite linear;
+    background: linear-gradient(to right, var(--purple-light-2) 8%, var(--purple-medium-1) 18%, var(--purple-light-2) 33%);
+    background-size: 800px 104px;
+    position: relative;
+    overflow: hidden;
+    border-radius: 8px;
+}
+
+.skeleton-movie {
+    width: 150px;
+    height: 225px;
+    display: inline-block;
+    margin-right: 16px;
+}
+
+.skeleton-category {
+    width: calc(50% - 8px);
+    height: 40px;
+    margin-bottom: 16px;
+}
+
+.skeleton-detail-title {
+    width: 70%;
+    height: 32px;
+    margin-bottom: 16px;
+}
+
+.skeleton-detail-score {
+    width: 20%;
+    height: 32px;
+    display: inline-block;
+    float: right;
+}
+
+.skeleton-detail-description {
+    width: 100%;
+    height: 100px;
+    margin-bottom: 24px;
+}
+
+/* Responsive adjustments */
+@media (min-width: 768px) {
+    .skeleton-movie {
+        width: 200px;
+        height: 300px;
+    }
+
+    .skeleton-category {
+        width: calc(25% - 18px);
+    }
+}
+
+/* Movie Detail Skeletons */
+.movieDetail-skeletons {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.movieDetail-content {
+    display: none;
+}
+
+.movieDetail-container.active .movieDetail-skeletons {
+    display: none;
+}
+
+.movieDetail-container.active .movieDetail-content {
+    display: block;
+}
+
+/* Ajusta los skeletons para que coincidan con tu diseño */
+.skeleton-detail-categories {
+    height: 100px;
+    width: 100%;
+    margin-top: 20px;
+}

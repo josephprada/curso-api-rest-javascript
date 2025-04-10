@@ -37,6 +37,12 @@ initializeThemeToggle();
 // Utils
 
 function createMovies(movies, container) {
+
+    const skeletons = container.querySelectorAll('.skeleton');
+    skeletons.forEach(skeleton => {
+        skeleton.classList.add('inactive');
+    });
+
     container.innerHTML = '';
 
     movies.forEach(movie => {
@@ -60,6 +66,12 @@ function createMovies(movies, container) {
 }
 
 function createCategories(categories, container) {
+
+    const skeletons = container.querySelectorAll('.skeleton');
+    skeletons.forEach(skeleton => {
+        skeleton.classList.add('inactive');
+    });
+
     container.innerHTML = '';
 
     categories.forEach(category => {
@@ -128,32 +140,49 @@ async function getTrendingMovies() {
 }
 
 async function getMovieById(id) {
+    
     const { data: movie } = await api('movie/' + id);
 
+    // Configurar el fondo del header
     const movieImgUrl = 'https://image.tmdb.org/t/p/w500' + movie.poster_path;
-    console.log(movieImgUrl)
     headerSection.style.background = `
-    linear-gradient(
-      180deg,
-      rgba(0, 0, 0, 0.35) 19.27%,
-      rgba(0, 0, 0, 0) 29.17%
-    ),
-    url(${movieImgUrl}) 50% 30%/cover no-repeat
-  `;
+        linear-gradient(
+            180deg,
+            rgba(0, 0, 0, 0.35) 19.27%,
+            rgba(0, 0, 0, 0) 29.17%
+        ),
+        url(${movieImgUrl}) 50% 30%/cover no-repeat
+    `;
 
+    // Llenar los datos
     movieDetailTitle.textContent = movie.title;
     movieDetailDescription.textContent = movie.overview;
     movieDetailScore.textContent = movie.vote_average;
 
+    // Crear categorías
     createCategories(movie.genres, movieDetailCategoriesList);
 
-    getRelatedMoviesId(id);
+    // Obtener películas relacionadas
+    await getRelatedMoviesId(id, document.querySelector('.relatedMovies-scrollContainer'));
+
+    // Mostrar contenido
+    movieDetailSection.classList.add('active');
+
 }
 
-async function getRelatedMoviesId(id) {
-    const { data } = await api(`movie/${id}/recommendations`);
-    const relatedMovies = data.results;
+async function getRelatedMoviesId(id, container) {
+        // Limpiar contenedor
+        container.innerHTML = '';
 
-    createMovies(relatedMovies, relatedMoviesContainer);
+        // Mostrar skeleton temporal
+        const skeleton = document.createElement('div');
+        skeleton.className = 'skeleton skeleton-movie';
+        container.appendChild(skeleton);
+
+        const { data } = await api(`movie/${id}/recommendations`);
+        const relatedMovies = data.results;
+
+        // Eliminar skeleton y mostrar películas
+        container.innerHTML = '';
+        createMovies(relatedMovies, container);
 }
-

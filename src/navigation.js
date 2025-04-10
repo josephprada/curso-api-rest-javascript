@@ -1,4 +1,6 @@
 searchFormBtn.addEventListener('click', () => {
+    // Mostrar skeletons antes de cambiar el hash
+    showSearchSkeletons();
     location.hash = '#search=' + searchFormInput.value;
 });
 
@@ -31,6 +33,20 @@ function navigator() {
 
     document.body.scrollTop = 0;
     document.documentElement.scrollTop = 0;
+}
+function showSearchSkeletons() {
+    // Limpiar resultados previos
+    genericSection.innerHTML = '';
+
+    // Crear 6 skeletons (puedes ajustar el número)
+    for (let i = 0; i < 6; i++) {
+        const skeleton = document.createElement('div');
+        skeleton.className = 'skeleton skeleton-movie';
+        genericSection.appendChild(skeleton);
+    }
+
+    // Asegurarse que la sección es visible
+    genericSection.classList.remove('inactive');
 }
 
 function homePage() {
@@ -69,6 +85,9 @@ function categoriesPage() {
     genericSection.classList.remove('inactive');
     movieDetailSection.classList.add('inactive');
 
+    // Mostrar skeletons
+    showSearchSkeletons();
+
     // ['#category', 'id-name']
     const [_, categoryData] = location.hash.split('=');
     const [categoryId, categoryName] = categoryData.split('-');
@@ -94,6 +113,15 @@ function movieDetailsPage() {
     genericSection.classList.add('inactive');
     movieDetailSection.classList.remove('inactive');
 
+    // Mostrar skeletons del detalle
+    const skeletons = movieDetailSection.querySelectorAll('.skeleton');
+    skeletons.forEach(skeleton => {
+        skeleton.classList.remove('inactive');
+    });
+
+    // Ocultar contenido real temporalmente
+    movieDetailSection.classList.remove('active');
+
     // ['#movie', '234567']
     const [_, movieId] = location.hash.split('=');
     getMovieById(movieId);
@@ -114,6 +142,9 @@ function searchPage() {
     categoriesPreviewSection.classList.add('inactive');
     genericSection.classList.remove('inactive');
     movieDetailSection.classList.add('inactive');
+
+    // Mostrar skeletons inmediatamente
+    showSearchSkeletons();
 
     // ['#search', 'platzi']
     const [_, query] = location.hash.split('=');
@@ -136,7 +167,9 @@ function trendsPage() {
     genericSection.classList.remove('inactive');
     movieDetailSection.classList.add('inactive');
 
-    headerCategoryTitle.innerHTML = 'Tendencias';
 
+    showSearchSkeletons();
+
+    headerCategoryTitle.innerHTML = 'Tendencias';
     getTrendingMovies();
 }

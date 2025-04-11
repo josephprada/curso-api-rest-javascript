@@ -36,34 +36,58 @@ initializeThemeToggle();
 
 // Utils
 
-function createMovies(movies, container) {
+function createMovies(movies, container, clean) {
 
+ 
+    // Limpiar skeletons
     const skeletons = container.querySelectorAll('.skeleton');
-    skeletons.forEach(skeleton => {
-        skeleton.classList.add('inactive');
-    });
+    skeletons.forEach(skeleton => skeleton.classList.add('inactive'));
 
-    container.innerHTML = '';
+    if (clean) {
+
+        container.innerHTML = '';
+    }
 
     movies.forEach(movie => {
         const movieContainer = document.createElement('div');
         movieContainer.classList.add('movie-container');
+
         movieContainer.addEventListener('click', () => {
-            location.hash = '#movie=' + movie.id;
+            location.hash = `#movie=${movie.id}`;
         });
 
         const movieImg = document.createElement('img');
         movieImg.classList.add('movie-img');
         movieImg.setAttribute('alt', movie.title);
-        movieImg.setAttribute(
-            'src',
-            'https://image.tmdb.org/t/p/w300' + movie.poster_path,
-        );
+        movieImg.setAttribute('loading', 'lazy'); // Lazy loading nativo
+
+        // Usar data-src en lugar de src
+        movieImg.dataset.src = movie.poster_path
+            ? 'https://image.tmdb.org/t/p/w300' + movie.poster_path
+            : 'https://via.placeholder.com/300x450?text=No+Poster';
+
+        // Placeholder inicial (imagen transparente 1x1)
+        movieImg.src = 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxIiBoZWlnaHQ9IjEiPjwvc3ZnPg==';
+
+        // Efecto de carga
+        movieImg.onload = () => {
+            movieImg.classList.add('loaded');
+        };
+
+        // Manejo de errores
+        movieImg.onerror = () => {
+            movieImg.src = 'https://img.freepik.com/free-vector/glitch-error-404-page-background_23-2148090410.jpg?semt=ais_hybrid&w=740';
+            movieImg.onerror = null; // Prevenir bucles
+        };
 
         movieContainer.appendChild(movieImg);
         container.appendChild(movieContainer);
     });
+
+    // Activar IntersectionObserver para estas imágenes
+    setupLazyLoadingForContainer(container);
 }
+
 
 function createCategories(categories, container) {
 
@@ -100,7 +124,7 @@ async function getTrendingMoviesPreview() {
     const movies = data.results;
     console.log(movies)
 
-    createMovies(movies, trendingMoviesPreviewList);
+    createMovies(movies, trendingMoviesPreviewList, true);
 }
 
 async function getCategegoriesPreview() {
@@ -118,7 +142,37 @@ async function getMoviesByCategory(id) {
     });
     const movies = data.results;
 
-    createMovies(movies, genericSection);
+    maxPage = data.total_pages;
+
+    createMovies(movies, genericSection, true);
+}
+
+function getPaginatedCategoriesMovies(id) {
+
+    return async function () {
+        const {
+            scrollTop,
+            scrollHeight,
+            clientHeight,
+        } = document.documentElement;
+
+        const scrollIsBottom = (scrollTop + clientHeight) >= (scrollHeight - 15);
+
+        const pageIsMax = page < maxPage;
+
+        if (scrollIsBottom && pageIsMax) {
+            page++;
+            const { data } = await api('discover/movie', {
+                params: {
+                    with_genres: id,
+                    page,
+                },
+            });
+            const movies = data.results;
+
+            createMovies(movies, genericSection, false);
+        }
+    }
 }
 
 async function getMoviesBySearch(query) {
@@ -129,14 +183,72 @@ async function getMoviesBySearch(query) {
     });
     const movies = data.results;
 
-    createMovies(movies, genericSection);
+    maxPage = data.total_pages;
+    console.log(maxPage);
+
+    createMovies(movies, genericSection, true);
+}
+function getPaginatedSearchMovies(query) {
+
+    return async function () {
+        const {
+            scrollTop,
+            scrollHeight,
+            clientHeight,
+        } = document.documentElement;
+
+        const scrollIsBottom = (scrollTop + clientHeight) >= (scrollHeight - 15);
+
+        const pageIsMax = page < maxPage;
+
+        if (scrollIsBottom && pageIsMax) {
+            page++;
+            const { data } = await api('search/movie', {
+                params: {
+                    query,
+                    page,
+                },
+            });
+            const movies = data.results;
+
+            createMovies(movies, genericSection, false);
+        }
+    }
 }
 
 async function getTrendingMovies() {
     const { data } = await api('trending/movie/day');
     const movies = data.results;
 
-    createMovies(movies, genericSection);
+    maxPage = data.total_pages;
+
+    createMovies(movies, genericSection, true );
+
+}
+
+async function getPaginatedTrendingMovies() {
+
+    const {
+        scrollTop,
+        scrollHeight,
+        clientHeight,
+    } = document.documentElement;
+
+    const scrollIsBottom = (scrollTop + clientHeight) >= (scrollHeight - 15);
+
+    const pageIsMax = page < maxPage;
+
+    if (scrollIsBottom && pageIsMax) {
+        page++;
+        const { data } = await api('trending/movie/day', {
+            params: {
+                page,
+            },
+        });
+        const movies = data.results;
+
+        createMovies(movies, genericSection, false);
+    }
 }
 
 async function getMovieById(id) {
@@ -160,7 +272,7 @@ async function getMovieById(id) {
     movieDetailScore.textContent = movie.vote_average;
 
     // Crear categorías
-    createCategories(movie.genres, movieDetailCategoriesList);
+    createCategories(movie.genres, movieDetailCategoriesList, true);
 
     // Obtener películas relacionadas
     await getRelatedMoviesId(id, document.querySelector('.relatedMovies-scrollContainer'));
@@ -184,5 +296,26 @@ async function getRelatedMoviesId(id, container) {
 
         // Eliminar skeleton y mostrar películas
         container.innerHTML = '';
-        createMovies(relatedMovies, container);
+        createMovies(relatedMovies, container, true);
+}
+function setupLazyLoadingForContainer(container) {
+    const lazyImages = container.querySelectorAll('.movie-img[data-src]');
+
+    if ('IntersectionObserver' in window) {
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    const img = entry.target;
+                    img.src = img.dataset.src;
+                    observer.unobserve(img);
+                }
+            });
+        }, { rootMargin: '200px' });
+
+        lazyImages.forEach(img => observer.observe(img));
+    } else {
+        lazyImages.forEach(img => {
+            if (img.dataset.src) img.src = img.dataset.src;
+        });
+    }
 }

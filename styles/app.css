@@ -752,3 +752,16 @@ footer {
     width: 100%;
     margin-top: 20px;
 }
+
+
+/*lazy img*/
+
+.movie-img {
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    min-height:200px;
+}
+
+.movie-img.loaded {
+    opacity: 1;
+}

@@ -1,4 +1,12 @@
-﻿// API Configuration
+﻿function getBrowserLanguage() {
+    // Obtiene el código de idioma del navegador (ej: 'es', 'en', 'fr')
+    const browserLang = navigator.language || navigator.userLanguage;
+    return browserLang.split('-')[0]; // Quita la región (ej: convierte 'es-ES' a 'es')
+}
+// Idioma por defecto (usará el del navegador o 'en' como fallback)
+const defaultLanguage = getBrowserLanguage();
+
+// API Configuration
 const api = axios.create({
     baseURL: 'https://api.themoviedb.org/3/',
     headers: {
@@ -6,8 +14,42 @@ const api = axios.create({
     },
     params: {
         'api_key': api_key,
+        'language': defaultLanguage, // 👈 Idioma del navegador
+        'region': defaultLanguage === 'es' ? 'ES' : 'US' // Opcional: ajusta región
     }
 });
+
+function likedMoviesList() {
+
+    const item = JSON.parse(localStorage.getItem('liked_movies'));
+    let likedMovies;
+
+    if (item) {
+        likedMovies = item;
+    } else {
+        likedMovies = {};
+    }
+
+    return likedMovies;
+
+}
+
+function likedMovie(movie) {
+
+    const likedMovies = likedMoviesList();
+
+    if (likedMovies[movie.id]) {
+        likedMovies[movie.id] = undefined;
+        delete likedMovies[movie.id];
+    } else {
+        likedMovies[movie.id] = movie;
+    }
+    localStorage.setItem('liked_movies', JSON.stringify(likedMovies));
+    if (location.hash == '') {
+        homePage();
+    }
+    return likedMovies;
+}
 
 // Theme Toggle Functionality
 function initializeThemeToggle() {
@@ -38,7 +80,9 @@ initializeThemeToggle();
 
 function createMovies(movies, container, clean) {
 
- 
+
+    console.log(movies);
+        
     // Limpiar skeletons
     const skeletons = container.querySelectorAll('.skeleton');
     skeletons.forEach(skeleton => skeleton.classList.add('inactive'));
@@ -52,9 +96,6 @@ function createMovies(movies, container, clean) {
         const movieContainer = document.createElement('div');
         movieContainer.classList.add('movie-container');
 
-        movieContainer.addEventListener('click', () => {
-            location.hash = `#movie=${movie.id}`;
-        });
 
         const movieImg = document.createElement('img');
         movieImg.classList.add('movie-img');
@@ -69,10 +110,25 @@ function createMovies(movies, container, clean) {
         // Placeholder inicial (imagen transparente 1x1)
         movieImg.src = 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxIiBoZWlnaHQ9IjEiPjwvc3ZnPg==';
 
+
         // Efecto de carga
         movieImg.onload = () => {
             movieImg.classList.add('loaded');
         };
+
+
+        movieImg.addEventListener('click', () => {
+            location.hash = `#movie=${movie.id}`;
+        });
+
+        //buton liked
+        const movieBtn = document.createElement('button');
+        movieBtn.classList.add('movie-btn');
+        likedMoviesList()[movie.id] && movieBtn.classList.add('movie-btn--liked');
+        movieBtn.addEventListener('click', () => {
+            movieBtn.classList.toggle('movie-btn--liked');
+            likedMovie(movie);
+        });
 
         // Manejo de errores
         movieImg.onerror = () => {
@@ -81,6 +137,7 @@ function createMovies(movies, container, clean) {
         };
 
         movieContainer.appendChild(movieImg);
+        movieContainer.appendChild(movieBtn);
         container.appendChild(movieContainer);
     });
 
@@ -122,7 +179,6 @@ function createCategories(categories, container) {
 async function getTrendingMoviesPreview() {
     const { data } = await api('trending/movie/day');
     const movies = data.results;
-    console.log(movies)
 
     createMovies(movies, trendingMoviesPreviewList, true);
 }
@@ -146,7 +202,6 @@ async function getMoviesByCategory(id) {
 
     createMovies(movies, genericSection, true);
 }
-
 function getPaginatedCategoriesMovies(id) {
 
     return async function () {
@@ -222,7 +277,7 @@ async function getTrendingMovies() {
 
     maxPage = data.total_pages;
 
-    createMovies(movies, genericSection, true );
+    createMovies(movies, genericSection, true);
 
 }
 
@@ -252,7 +307,7 @@ async function getPaginatedTrendingMovies() {
 }
 
 async function getMovieById(id) {
-    
+
     const { data: movie } = await api('movie/' + id);
 
     // Configurar el fondo del header
@@ -283,20 +338,20 @@ async function getMovieById(id) {
 }
 
 async function getRelatedMoviesId(id, container) {
-        // Limpiar contenedor
-        container.innerHTML = '';
+    // Limpiar contenedor
+    container.innerHTML = '';
 
-        // Mostrar skeleton temporal
-        const skeleton = document.createElement('div');
-        skeleton.className = 'skeleton skeleton-movie';
-        container.appendChild(skeleton);
+    // Mostrar skeleton temporal
+    const skeleton = document.createElement('div');
+    skeleton.className = 'skeleton skeleton-movie';
+    container.appendChild(skeleton);
 
-        const { data } = await api(`movie/${id}/recommendations`);
-        const relatedMovies = data.results;
+    const { data } = await api(`movie/${id}/recommendations`);
+    const relatedMovies = data.results;
 
-        // Eliminar skeleton y mostrar películas
-        container.innerHTML = '';
-        createMovies(relatedMovies, container, true);
+    // Eliminar skeleton y mostrar películas
+    container.innerHTML = '';
+    createMovies(relatedMovies, container, true);
 }
 function setupLazyLoadingForContainer(container) {
     const lazyImages = container.querySelectorAll('.movie-img[data-src]');
@@ -318,4 +373,9 @@ function setupLazyLoadingForContainer(container) {
             if (img.dataset.src) img.src = img.dataset.src;
         });
     }
+}
+function getLikedMovies() {
+    const likedMovies = likedMoviesList();
+    const moviesArray = Object.values(likedMovies);
+    createMovies(moviesArray, favoritos, true);
 }

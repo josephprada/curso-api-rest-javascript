@@ -148,6 +148,7 @@ button {
 .movie-container {
     cursor: pointer;
     transition: transform 0.2s;
+    position:relative;
 }
 
     .movie-container:hover {
@@ -158,6 +159,31 @@ button {
     border-radius: 8px;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
 }
+
+.movie-btn {
+    position: absolute;
+    top: 5px;
+    right: 10px;
+    height: 30px;
+    width: 30px;
+    border-radius: 30px;
+    padding: 0;
+    margin: 0;
+    background-color: white;
+}
+
+    .movie-btn:before {
+        content: '💜';
+    }
+
+.movie-btn--liked {
+    background-color: var(--purple-medium-2);
+    box-shadow: 0px 0px 10px 2px var(--purple-medium-2);
+}
+
+    .movie-btn--liked::before {
+        content: "🤍";
+    }
 
 .categoriesPreview-list, .categories-list {
     display: flex;
@@ -764,4 +790,69 @@ footer {
 
 .movie-img.loaded {
     opacity: 1;
+}
+
+/* Agrega esto al final de tu archivo CSS, manteniendo todo lo demás exactamente igual */
+
+/* Liked Movies - Same styles as trendingPreview */
+.liked-movieList {
+    overflow-x: auto;
+    overflow-y: hidden;
+    white-space: nowrap;
+    height: auto;
+    padding-left: 24px;
+    padding-bottom: 16px;
+    scrollbar-width: thin;
+    scrollbar-color: var(--purple-medium-2) var(--purple-light-2);
+}
+
+    .liked-movieList::-webkit-scrollbar {
+        height: 8px;
+    }
+
+    .liked-movieList::-webkit-scrollbar-track {
+        background: var(--purple-light-2);
+        border-radius: 4px;
+    }
+
+    .liked-movieList::-webkit-scrollbar-thumb {
+        background-color: var(--purple-medium-2);
+        border-radius: 4px;
+    }
+
+    .liked-movieList .movie-container {
+        display: inline-block;
+        margin-right: 16px;
+    }
+
+        .liked-movieList .movie-container .movie-img {
+            height: 225px;
+            min-height: 225px;
+            max-height: 225px;
+            width: 150px;
+            min-width: 150px;
+            max-width: 150px;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+
+@media (min-width: 768px) {
+    .liked-movieList {
+        padding-left: 48px;
+    }
+
+        .liked-movieList .movie-container .movie-img {
+            height: 300px;
+            min-height: 300px;
+            max-height: 300px;
+            width: 200px;
+            min-width: 200px;
+            max-width: 200px;
+        }
+}
+
+@media (min-width: 1024px) {
+    .liked-movieList {
+        padding-left: 64px;
+    }
 }
